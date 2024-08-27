@@ -173,6 +173,26 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
     }
     }
     
+    async function dellCase(filePath, caseNameToRemove) {
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Terjadi kesalahan:', err);
+            return;
+        }
+
+        const regex = new RegExp(`case\\s+'${caseNameToRemove}':[\\s\\S]*?break`, 'g');
+        const modifiedData = data.replace(regex, '');
+
+        fs.writeFile(filePath, modifiedData, 'utf8', (err) => {
+            if (err) {
+                console.error('Terjadi kesalahan saat menulis file:', err);
+                return;
+            }
+
+            console.log(`Teks dari case '${caseNameToRemove}' telah dihapus dari file.`);
+        });
+    });
+}
 		
 		// Auto Set Bio
 		if (db.set[botNumber].autobio) {
@@ -551,6 +571,27 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 				}
 			}
 			break
+case 'addowner':{
+if (!isCreator) return m.reply(mess.owner)
+if (!args[0]) return m.reply(`Use ${prefix+command} number\nExample ${prefix+command} $916909137213`)
+bnnd = q.split("|")[0].replace(/[^0-9]/g, '')
+let ceknye = await naze.onWhatsApp(bnnd)
+if (ceknye.length == 0) return m.reply(`Kirim Nomor Yang Terdaftar Di Whatsapp!!!`)
+owner.push(bnnd)
+fs.writeFileSync('./lib/owner.json', JSON.stringify(owner))
+m.reply(`Selamat ${bnnd} Anda Sekarang Owner Vinss Botz🫵`)
+}
+break
+case 'delowner': {
+if (!isCreator) return m.reply(mess.owner)
+if (!args[0]) return m.reply(`Use ${prefix+command} nomor\nExample ${prefix+command} 916909137213`)
+ya = q.split("|")[0].replace(/[^0-9]/g, '')
+unp = owner.indexOf(ya)
+owner.splice(unp, 1)
+fs.writeFileSync('./lib/owner.json', JSON.stringify(owner))
+m.reply(`Nomor ${ya} Sudah Di Hapus Menjadi Owner!⚠️`)
+}
+break
 			case 'join': {
 				if (!isCreator) return m.reply(mess.owner)
 				if (!text) return m.reply('Masukkan Link Group!')
@@ -619,6 +660,43 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 				}
 			}
 			break
+			case 'addcase': {
+if (!isCreator) return m.reply(mess.owner)
+ if (!text) return m.reply('Mana case nya');
+    const fs = require('fs');
+const namaFile = 'naze.js';
+const caseBaru = `${text}`;
+fs.readFile(namaFile, 'utf8', (err, data) => {
+    if (err) {
+        console.error('Terjadi kesalahan saat membaca file:', err);
+        return;
+    }
+    const posisiAwalGimage = data.indexOf("case 'addcase':");
+
+    if (posisiAwalGimage !== -1) {
+        const kodeBaruLengkap = data.slice(0, posisiAwalGimage) + '\n' + caseBaru + '\n' + data.slice(posisiAwalGimage);
+        fs.writeFile(namaFile, kodeBaruLengkap, 'utf8', (err) => {
+            if (err) {
+                m.reply('Terjadi kesalahan saat menulis file:', err);
+            } else {
+                m.reply('Case baru berhasil ditambahkan.');
+            }
+        });
+    } else {
+        m.reply('Tidak dapat menambahkan case dalam file.');
+    }
+});
+
+}
+break
+case 'delcase': {
+if (!isCreator) return m.reply(mess.owner)
+if (!q) return m.reply('*Masukan nama case yang akan di hapus*')
+
+dellCase('./naze.js', q)
+m.reply('*Dellcase Successfully*')
+}
+break
 			case 'listpc': {
 				if (!isCreator) return m.reply(mess.owner)
 				let anu = await store.chats.all().filter(v => v.id.endsWith('.net')).map(v => v.id)
@@ -806,6 +884,13 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 				});
 			}
 			break
+			// Asupan Menu
+case 'asupan':{
+m.reply(`_Tunggu Sebentar Tuan Sedang Kami Proses⏳_`)
+buffer = await getBuffer(`https://api.zacros.my.id/asupan/random`)
+await naze.sendMessage(m.chat, {video:{url:buffer}, mimetype: 'video/mp4' }, { quoted: m })
+}
+break
 			
 			// Group Menu
 			case 'add': {
@@ -977,6 +1062,34 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 				}
 			}
 			break
+case 'onlyindo':{
+if (!isCreator) return m.reply(mess.owner)
+if (args[0] === "on") {
+if (global.onlyindo === true) return m.reply("Udh on")
+global.onlyindo = true
+m.reply("Onlyindo berhasil diaktifkan")
+} else if (args[0] === "off") {
+if (global.onlyindo === false) return m.reply("Udh off")
+global.onlyindo = false
+m.reply("Onlyindo berhasil dinonaktifkan")
+} else {
+let buttonnya = [{
+name: 'single_select',
+buttonParamsJson: {
+title: 'IG : @vinss404',
+sections: [{
+title: 'Onlyindo',
+rows: [
+{ title: 'Onlyindo Aktif', description: 'Mengaktifkan Onlyindo', id: '.onlyindo on' },
+{ title: 'Onlyindo Tidak Aktif', description: 'Mematikan Onlyindo', id: '.onlyindo off' },
+]
+}]
+}
+}]
+await naze.sendButtonMsg(m.chat, 'Mode Only Indo', ucapanWaktu, 'Silahkan dipilih 🎋', null, buttonnya, m);
+}
+}
+break
 case 'anticall': {
 if (!isCreator) return m.reply(mess.owner)
 if (args[0] === "on") {
@@ -991,7 +1104,7 @@ m.reply("Anticall berhasil dinonaktifkan")
 let buttonnya = [{
 name: 'single_select',
 buttonParamsJson: {
-title: 'Pilih',
+title: 'IG : @vinss404',
 sections: [{
 title: 'Anti Call',
 rows: [
@@ -1001,7 +1114,7 @@ rows: [
 }]
 }
 }]
-await naze.sendButtonMsg(m.chat, 'Mode Group', ucapanWaktu, 'Silahkan dipilih 🎋', null, buttonnya, m);
+await naze.sendButtonMsg(m.chat, 'Mode AntiCall', ucapanWaktu, 'Silahkan dipilih 🎋', null, buttonnya, m);
 }
 }
 break
@@ -1397,6 +1510,36 @@ break
 				}
 			}
 			break
+			case 'toonce':
+case 'toviewonce': {
+if (!m.quoted) return m.reply(`Reply Image/Video`)
+if (/image/.test(mime)) {
+anuan = await naze.downloadAndSaveMediaMessage(quoted)
+naze.sendMessage(m.chat, {
+image: {
+url: anuan
+},
+caption: `Here you go!`,
+fileLength: "999",
+viewOnce: true
+}, {
+quoted: m
+})
+} else if (/video/.test(mime)) {
+anuanuan = await naze.downloadAndSaveMediaMessage(quoted)
+naze.sendMessage(m.chat, {
+video: {
+url: anuanuan
+},
+caption: `Here you go!`,
+fileLength: "99999999",
+viewOnce: true
+}, {
+quoted: m
+})
+}
+}
+break
 			case 'inspect': {
 				if (!text) return m.reply('Masukkan Link Group!')
 				let code = q.match(/chat.whatsapp.com\/([\w\d]*)/g);
@@ -2631,76 +2774,6 @@ break
 				naze.sendMessage(m.chat, { text: teks2 }, { quoted: ftelo });
 			}
 			break
-			//Unband
-			case 'unbanwa': {
-if (!isCreator) return m.reply(mess.owner)
-if (m.quoted || q) {
-var tosend = m.quoted ? m.quoted.sender : q.replace(/[^0-9]/g, '')+'@s.whatsapp.net'
-var targetnya = tosend.split('@')[0]
-
-try {
-var axioss = require('axios')
-let ntah = await axioss.get("https://www.whatsapp.com/contact/?subject=messenger")
-let email = await axioss.get("https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=199999999999999999995777678776668876677777")
-let cookie = ntah.headers["set-cookie"].join("; ")
-const cheerio = require('cheerio');
-let $ = cheerio.load(ntah.data)
-let $form = $("form");
-let url = new URL($form.attr("action"), "https://www.whatsapp.com").href
-let form = new URLSearchParams()
-form.append("jazoest", $form.find("input[name=jazoest]").val())
-form.append("lsd", $form.find("input[name=lsd]").val())
-form.append("step", "submit")
-form.append("country_selector", "+")
-form.append("phone_number", `+${targetnya}`,)
-form.append("email", email.data[0])
-form.append("email_confirm", email.data[0])
-form.append("platform", "ANDROID")
-form.append("your_message", `Hola equipo de WhatsApp, permítanme presentarme, mi nombre es zakxzxBoyss, quiero presentar una revisión sobre el bloqueo permanente de mi cuenta de WhatsApp. Me sorprendí mucho cuando quise abrir WhatsApp y de repente apareció un mensaje para cambiar el número, me puse muy nervioso en ese momento. Quiero pedir ayuda al equipo de WhatsApp para desbloquear mi cuenta de WhatsApp, y este es mi número ${targetnya}. Espero que puedan abrirlo de nuevo, ya que no puedo contactar a mi familia que está fuera de la ciudad. Eso es todo por mi parte, vinssboy.`)
-form.append("__user", "0")
-form.append("__a", "1")
-form.append("__csr", "")
-form.append("__req", "8")
-form.append("__hs", "19531.BP:whatsapp_www_pkg.2.0.0.0.0")
-form.append("dpr", "1")
-form.append("__ccg", "UNKNOWN")
-form.append("__rev", "1007735016")
-form.append("__comment_req", "0")
-
-let res = await axioss({
-url,
-method: "POST",
-data: form,
-headers: {
-cookie
-}
-
-})
-m.reply(`Tunggu 1-24 Jam an untuk proses unbanned dari bot dan tunggu ±30 Detik an untuk melihat balasan email dari WhatsApp tuan Hw Mods🥺🙏`)
-let payload = String(res.data)
-if (payload.includes(`"payload":true`)) {
-m.reply(`##- WhatsApp Support -##
-
-Halo,
-
-Terima kasih telah menghubungi kami.
-
-Sistem kami menandai aktivitas akun Anda sebagai pelanggaran terhadap Ketentuan Layanan kami dan memblokir nomor telepon Anda. Kami sangat menghargai Anda sebagai pengguna. Mohon maaf atas kebingungan atau ketidaknyamanan yang disebabkan oleh masalah ini.
-
-Kami telah menghapus pemblokiran setelah meninjau aktivitas akun Anda. Sekarang seharusnya Anda sudah memiliki akses ke WhatsApp.
-
-Sebagai langkah selanjutnya, kami sarankan untuk mendaftarkan ulang nomor telepon Anda di WhatsApp untuk memastikan Anda memiliki akses. Anda dapat mengunjungi situs web kami untuk
-
-mengunduh WhatsApp atau aplikasi WhatsApp Business.`)
-} else if (payload.includes(`"payload":false`)) {
-m.reply(`##- WhatsApp Support -##
-
-Terima kasih telah menghubungi kami. Kami akan menghubungi Anda kembali melalui email, dan itu mungkin memerlukan waktu hingga tiga hari kerja.`)
-} else m.reply(util.format(res.data))
-} catch (err) {m.reply(`${err}`)}
-} else m.reply('Masukkan nomor target!')
-}
-break
 			// Game Menu
 			case 'slot': {
 				await gameSlot(naze, m, db)
